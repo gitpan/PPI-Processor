@@ -44,7 +44,7 @@ ok( $Task->flush_store, '->flush_store returns true after init' );
 
 # So should the default KeyedTask
 {
-is( $PPK->autoconstruct, 1, "$PPT supports autoconstruct" );
+is( $PPK->autoconstruct, 0, "$PPT supports autoconstruct" );
 my $Task = $PPK->new;
 isa_ok( $Task, $PPK );
 isa_ok( $Task, $PPT );

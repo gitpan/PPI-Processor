@@ -39,8 +39,11 @@ use base 'PPI::Processor::Task';
 
 use vars qw{$VERSION};
 BEGIN {
-	$VERSION = '0.05';
+	$VERSION = '0.06';
 }
+
+# Requires arguments, and therefore cannot autoconstruct
+sub autoconstruct { 0 }
 
 
 
@@ -68,19 +71,21 @@ be a simple word, and each value can be one of three things.
   'Module::Name::function'
 
 A string in this format will cause the task to be done by calling the named
-function, passing it the L<PPI::Document> object as the first argument.
+function, passing it the L<PPI::Document> object as the first argument, and
+filename as second argument.
 
   'Module::Name->method'
 
 A string in this form will cause the task to be done by calling the named
-static method, passing it the L<PPI::Document> object as the first argument.
-Please note that the string is not evaluated, the notation is merely used
-to indicate that it is a method.
+static method, passing it the L<PPI::Document> object as the first
+argument, and filename as second argument. Please note that the string is
+not evaluated, the notation is merely used to indicate that it is a method.
 
   &coderef
 
 Any anonymous subroutine reference provided as a task will be called
-directly, and is passed the L<PPI::Document> object as the first argument.
+directly, and is passed the L<PPI::Document> object as the first argument,
+and filename as second argument.
 
 =back
 
@@ -105,7 +110,7 @@ sub new {
 	my $self = $class->SUPER::new( %args ) or return undef;
 
 	# Add the tasks
-	$self->{tasks} = $tasks;
+	$self->{tasks} = $tasks if $tasks;
 
 	$self;
 }
@@ -191,6 +196,26 @@ sub flush_file {
 #####################################################################
 # PPI::Processor::Task Methods
 
+=pod
+
+=head2 process_document $Document, $file
+
+Instead of doing a single task on the Document, the KeyedTask
+sub-class is designed to run a number of analysis tasks at one time.
+
+The process_document method provides the default mechanism by
+loading and calling the methods indicated by the C<tasks> method.
+
+This class assumes that all the tasks can be achieved using a Document
+in a non-destructive way. If there is any chance the parsing might fail
+during the process, you should use C<process_file> manually.
+
+The use of a manual C<process_file> method in a ::KeyedTask sub-class
+will cause it to be used instead of this C<process_document> and
+C<tasks> mechanism.
+
+=cut
+
 sub process_document {
 	my $self     = shift;
 	my $Document = isa($_[0], 'PPI::Document') ? shift : return undef;
@@ -201,7 +226,7 @@ sub process_document {
 	my %results = map { $_ => undef } keys %tasks;
 	foreach my $task ( sort keys %tasks ) {
 		eval {
-			$results{$task} = $tasks{$task}->($Document);
+			$results{$task} = $tasks{$task}->($Document, $filename);
 		};
 		last if $@; # Skip the rest of the tests on error
 	}
@@ -247,7 +272,7 @@ Funding provided by The Perl Foundation
 
 =head1 COPYRIGHT
 
-Copyright (c) 2004 Adam Kennedy. All rights reserved.
+Copyright (c) 2004 - 2005 Adam Kennedy. All rights reserved.
 This program is free software; you can redistribute
 it and/or modify it under the same terms as Perl itself.
 

@@ -1,5 +1,5 @@
 name: PPI-Processor
-version: 0.05
+version: 0.06
 abstract: Implement a PPI Document processing engine
 author: Adam Kennedy<cpan@ali.as>
 license: perl

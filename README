@@ -86,6 +86,13 @@ METHODS
 
     Returns true on success, or "undef" on error.
 
+  errstr
+    For any error that occurs, you can use the "errstr", as either a static
+    or object method, to access the error message.
+
+    If no error occurs for any particular action, "errstr" will return
+    false.
+
 SUPPORT
     Bugs should always be submitted via the CPAN bug tracker
 
@@ -99,9 +106,9 @@ AUTHOR
     Funding provided by The Perl Foundation
 
 COPYRIGHT
-    Copyright (c) 2004 Adam Kennedy. All rights reserved. This program is
-    free software; you can redistribute it and/or modify it under the same
-    terms as Perl itself.
+    Copyright (c) 2004 - 2005 Adam Kennedy. All rights reserved. This
+    program is free software; you can redistribute it and/or modify it under
+    the same terms as Perl itself.
 
     The full text of the license can be found in the LICENSE file included
     with this module.

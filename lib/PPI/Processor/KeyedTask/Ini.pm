@@ -19,9 +19,9 @@ PPI::Processor::KeyedTask that writes the result data out to a .ini-style
 file in the format.
 
   [authors/id/A/AD/ADAMK/Config-Tiny-2.00.tar.gz/Config-Tiny-2.00/lib/Config/Tiny.pm]
-  tokenized=1
-  lexed=1
-  balanced_tree=0
+  tokenized     = 1
+  lexed         = 1
+  balanced_tree = 0
 
 That is, one section for each file with the test keys as properties.
 
@@ -43,7 +43,7 @@ use Config::Tiny ();
 
 use vars qw{$VERSION};
 BEGIN {
-	$VERSION = '0.05';
+	$VERSION = '0.06';
 }
 
 
@@ -144,7 +144,7 @@ Funding provided by The Perl Foundation
 
 =head1 COPYRIGHT
 
-Copyright (c) 2004 Adam Kennedy. All rights reserved.
+Copyright (c) 2004 - 2005 Adam Kennedy. All rights reserved.
 This program is free software; you can redistribute
 it and/or modify it under the same terms as Perl itself.
 

@@ -30,7 +30,7 @@ use PPI::Document        ();
 
 use vars qw{$VERSION $errstr};
 BEGIN {
-	$VERSION = '0.05';
+	$VERSION = '0.06';
 	$errstr  = '';
 }
 
@@ -322,7 +322,17 @@ sub _clear {
 	$_[0];
 }
 
-# Fetch the error message
+=pod
+
+=head2 errstr
+
+For any error that occurs, you can use the C<errstr>, as either
+a static or object method, to access the error message.
+
+If no error occurs for any particular action, C<errstr> will return false.
+
+=cut
+
 sub errstr {
 	$errstr;
 }
@@ -347,7 +357,7 @@ Funding provided by The Perl Foundation
 
 =head1 COPYRIGHT
 
-Copyright (c) 2004 Adam Kennedy. All rights reserved.
+Copyright (c) 2004 - 2005 Adam Kennedy. All rights reserved.
 This program is free software; you can redistribute
 it and/or modify it under the same terms as Perl itself.
 
