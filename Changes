@@ -1,4 +1,8 @@
 Revision history for Perl extension PPI::Processor
 
-0.01 Tue Dec 27 2004
+0.02 Tue Dec 28 2004
+	- Added the ->source accessor method
+	- Added missing documentation for the ->new constructor
+
+0.01 Mon Dec 27 2004
 	- Created the initial version of the module

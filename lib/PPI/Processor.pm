@@ -31,7 +31,7 @@ use PPI::Processor::Task ();
 
 use vars qw{$VERSION $errstr};
 BEGIN {
-	$VERSION = '0.01';
+	$VERSION = '0.02';
 	$errstr  = '';
 }
 
@@ -40,7 +40,37 @@ BEGIN {
 
 
 #####################################################################
-# Constructor
+# Constructor and Accessors
+
+=pod
+
+=head2 new source => $source
+
+The C<new> constructor creates a new Processor object. It takes as argument
+a set of name => value pairs. The base class accepts two named parameters.
+
+=over
+
+=item source
+
+The required C<source> param identifies the source directory for the perl
+files to be processed. It must be a directory that exists and for which we
+have read permissions.
+
+=item find
+
+The optional C<find> parameter lets you pass a L<File::Find::Rule> object
+that will be used to find the set of files within the source directory
+that are to be processed.
+
+If not provided, a default File::Find::Rule object will be used that
+processes all .pm files contained in the source directory.
+
+=back
+
+Returns a new PPI::Processor object, or C<undef> on error.
+
+=cut
 
 sub new {
 	my $class  = ref $_[0] ? ref shift : shift;
@@ -67,6 +97,17 @@ sub new {
 
 	$self;
 }
+
+=pod
+
+=head2 source
+
+The C<source> accessor method returns the source directory that the
+object was created with.
+
+=cut
+
+sub source { $_[0]->{source} }
 
 
 

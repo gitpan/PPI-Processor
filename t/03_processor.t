@@ -17,7 +17,7 @@ BEGIN {
 	}
 }
 
-use Test::More tests => 26;
+use Test::More tests => 27;
 use PPI::Processor       ();
 
 # Set the testing directory (out own modules)
@@ -26,6 +26,7 @@ my $source = 't.data';
 # Create a new processor object
 my $Processor = PPI::Processor->new( source => $source );
 isa_ok( $Processor, 'PPI::Processor' );
+is( $Processor->source, $source, '->source returns the source' );
 
 # Add the null Task
 my $Task = PPI::Processor::Task->new;

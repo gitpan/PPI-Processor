@@ -13,6 +13,30 @@ DESCRIPTION
     the same basic API.
 
 METHODS
+  new source => $source
+    The "new" constructor creates a new Processor object. It takes as
+    argument a set of name => value pairs. The base class accepts two named
+    parameters.
+
+    source
+        The required "source" param identifies the source directory for the
+        perl files to be processed. It must be a directory that exists and
+        for which we have read permissions.
+
+    find
+        The optional "find" parameter lets you pass a File::Find::Rule
+        object that will be used to find the set of files within the source
+        directory that are to be processed.
+
+        If not provided, a default File::Find::Rule object will be used that
+        processes all .pm files contained in the source directory.
+
+    Returns a new PPI::Processor object, or "undef" on error.
+
+  source
+    The "source" accessor method returns the source directory that the
+    object was created with.
+
   add_task $Task
     The "add_task" method is used to add a Task to the Processor object
     before processing commences.
