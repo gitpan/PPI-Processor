@@ -1,6 +1,10 @@
 Revision history for Perl extension PPI::Processor
 
-0.11 Mon Jan 11 2005
+0.12 Mon Jan 10 2005
+	- Pass the relative path in and around the tasks as well as the absolute path
+	- Added no_index( directory => 't.data' ) to Makefile.PL to keep PAUSE indexer happy
+
+0.11 Mon Jan 10 2005
 	- Added the 'incremental_write' option to PPI::Processor::KeyedTask::Ini
 	- Force 'force_expand' to true when 'missing_makefile_report' is provided
 

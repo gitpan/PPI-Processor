@@ -39,7 +39,7 @@ use base 'PPI::Processor::Task';
 
 use vars qw{$VERSION};
 BEGIN {
-	$VERSION = '0.11';
+	$VERSION = '0.12';
 }
 
 # Requires arguments, and therefore cannot autoconstruct
@@ -198,7 +198,7 @@ sub flush_file {
 
 =pod
 
-=head2 process_document $Document, $file
+=head2 process_document $Document, $file, $relative
 
 Instead of doing a single task on the Document, the KeyedTask
 sub-class is designed to run a number of analysis tasks at one time.
@@ -219,21 +219,22 @@ C<tasks> mechanism.
 sub process_document {
 	my $self     = shift;
 	my $Document = isa($_[0], 'PPI::Document') ? shift : return undef;
-	my $filename = shift;
+	my $file     = shift;
+	my $path     = shift; # Relative
 
 	# Hand off to each of the tasks
 	my %tasks   = $self->tasks or return undef;
 	my %results = map { $_ => undef } keys %tasks;
 	foreach my $task ( sort keys %tasks ) {
 		eval {
-			local $_ = $filename;
-			$results{$task} = $tasks{$task}->($Document, $filename);
+			local $_ = $file;
+			$results{$task} = $tasks{$task}->($Document, $file, $path);
 		};
 		last if $@; # Skip the rest of the tests on error
 	}
 
 	# Save the results
-	$self->store_file( $filename, \%results );
+	$self->store_file( $path, \%results );
 }
 
 

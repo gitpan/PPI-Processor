@@ -1,5 +1,5 @@
 name: PPI-Processor
-version: 0.11
+version: 0.12
 abstract: Implement a PPI Document processing engine
 author: Adam Kennedy<cpan@ali.as>
 license: perl
@@ -15,5 +15,6 @@ requires:
   PPI: 0.840
 no_index:
   directory:
+    - t.data
     - inc
 generated_by: Module::Install version 0.36

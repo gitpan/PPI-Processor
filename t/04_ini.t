@@ -61,7 +61,7 @@ is( $Task->store->{foo}->{one}, 'two',  '->store_file stored value correctly' );
 
 # Now give it a (wrong) Document to process
 my $Document = PPI::Document->new();
-ok( $Task->process_document( $Document, 'file' ), '->process_document returns true' );
+ok( $Task->process_document( $Document, 'file', 'file' ), '->process_document returns true' );
 is( $Task->store->{file}->{foo}, 1, '->process_document saves value correctly' );
 is( $Task->store->{file}->{bar}, 2, '->process_document saves value correctly' );
 

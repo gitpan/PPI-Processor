@@ -37,7 +37,7 @@ use PPI::Document        ();
 
 use vars qw{$VERSION $errstr};
 BEGIN {
-	$VERSION = '0.11';
+	$VERSION = '0.12';
 	$errstr  = '';
 }
 
@@ -270,7 +270,7 @@ sub run {
 				}
 			} else {
 				# We don't need or want to use process_document
-				$rv = $Task->process_file($path);
+				$rv = $Task->process_file($path, $file);
 			}
 		}
 

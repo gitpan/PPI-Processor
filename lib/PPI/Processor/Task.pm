@@ -22,7 +22,7 @@ use PPI::Document ();
 
 use vars qw{$VERSION};
 BEGIN {
-	$VERSION = '0.11';
+	$VERSION = '0.12';
 }
 
 
@@ -201,8 +201,7 @@ C<undef> if an error occurred while processing the file.
 =cut
 
 sub process_file {
-	my $self = shift;
-	my $file = shift;
+	my ($self, $file, $path) = @_;
 
 	# Skip if no process_document method
 	return '' unless $self->can('process_document');
@@ -211,12 +210,12 @@ sub process_file {
 	my $Document = PPI::Document->load($file) or return '';
 
 	# Hand off to the next method
-	$self->process_document( $Document, $file );
+	$self->process_document( $Document, $file, $path );
 }
 
 =pod
 
-=head2 process_document $Document, $file
+=head2 process_document $Document, $file, $relative
 
 The C<process_document> method should be implemented by Tasks that wish
 to work only with fully parsed documents, and are not concerned about
