@@ -30,7 +30,7 @@ use PPI::Document        ();
 
 use vars qw{$VERSION $errstr};
 BEGIN {
-	$VERSION = '0.09';
+	$VERSION = '0.10';
 	$errstr  = '';
 }
 
@@ -204,7 +204,7 @@ Returns true if the Task is added, or C<undef> on error.
 
 sub add_task {
 	my $self = shift->_clear;
-	my $Task = $self->_Task(shift) or return undef;
+	my $Task = $self->_Task(@_) or return undef;
 
 	# Initialise the store
 	$Task->init_store or return undef;
@@ -307,6 +307,7 @@ sub init {
 	# if we don't find at least one file to process.
 	my @files = $self->{find}->relative->in( $self->{source} )
 		or return $self->_error("Failed to find any files to process in '$self->{source}'");
+	@files = sort @files;
 	$self->{files} = \@files;
 
 	# Do we want to use pooled document objects?
@@ -357,13 +358,7 @@ sub _Task {
 	}
 
 	# Create the object
-	my $Object = $Task->new;
-	unless ( $Object ) {
-		return $either->_error("Failed to auto-construct $Task object");
-	}
-
-	# Complete, return the object
-	$Object;
+	$Task->new( @_ ) or $either->_error("Failed to auto-construct $Task object");
 }
 
 # Set the error message

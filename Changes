@@ -1,5 +1,11 @@
 Revision history for Perl extension PPI::Processor
 
+0.10 Mon Jan 10 2005
+	- Allow ->add_task( $class, %params )
+	- Fixed a bug in PPI::Processor::KeyedTask::Ini::new caused by an
+	  incorrect assumption of the behaviour of -w
+	- Process the files in path-sorted order
+
 0.09 Mon Jan 10 2005
 	- Added support for the 'limit' option
 

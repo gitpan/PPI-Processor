@@ -43,7 +43,7 @@ use Config::Tiny ();
 
 use vars qw{$VERSION};
 BEGIN {
-	$VERSION = '0.09';
+	$VERSION = '0.10';
 }
 
 
@@ -79,16 +79,14 @@ sub new {
 	my $class = ref $_[0] ? ref shift : shift;
 	my %args  = @_;
 
-	# Were we given a file?
+	# Check the file argument
 	my $file = delete $args{file};
-	if ( $file and ! -w $file ) {
-		return undef;
-	}
+	$class->_check_file($file) or return undef;
 
 	# Create the object
 	my $self = $class->SUPER::new( %args ) or return undef;
 
-	# Add the file property
+	# Set the file
 	$self->{file} = $file;
 
 	$self;
@@ -129,6 +127,24 @@ sub end_store {
 sub DESTROY {
 	$_[0]->end_store unless $_[0]->{end_store};
 	1;
+}
+
+
+
+
+
+#####################################################################
+# Support Methods
+
+sub _check_file {
+	my $file = $_[1];
+	return 1 unless $file;
+	return 1 if -w $file;
+	my ($v, $d, $f) = File::Spec->splitpath( $file );
+	my $dir = File::Spec->catpath( $v, $d );
+	return '' unless -e $dir;
+	return '' unless -d $dir;
+	return -w $dir;
 }
 
 1;
