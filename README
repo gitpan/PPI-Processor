@@ -37,14 +37,14 @@ METHODS
         If not provided, a default File::Find::Rule object will be used that
         processes all .pm files contained in the source directory.
 
-    flushstate
+    flush_results
         Some Task classes (generally the parellel-capable ones that generate
         information on a per-file basis) support incremental state.
 
         That is, they are able to determine if they have previously
         calculated a result for a file, and skip it.
 
-        Setting flushstate to true (false by default) will force any of
+        Setting flush_results to true (false by default) will force any of
         these shared states to be reset before the processing run starts.
 
     before_file
@@ -74,9 +74,9 @@ METHODS
     The "source" accessor method returns the source directory that the
     object was created with.
 
-  flushstore
-    The "flushstore" accessor method returns the setting for the argument of
-    the same name provided to the constructor.
+  flush_results
+    The "flush_results" accessor method returns the setting for the argument
+    of the same name provided to the constructor.
 
   add_task $Task
     The "add_task" method is used to add a Task to the Processor object

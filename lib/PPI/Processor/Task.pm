@@ -105,10 +105,8 @@ mechanism.
 sub store {
 	my $self = shift;
 
-	# Handle the most common cases
-	exists $self->{store}
-		? $self->{store}
-		: die "Unable to locate the Task's result store";
+	# Handle the most common case
+	exists $self->{store} ? $self->{store} : undef;
 }
 
 =pod
@@ -146,9 +144,11 @@ Returns true if the result store is flushed, or false otherwise.
 =cut
 
 sub flush_store {
-	my $self = shift;
-	return undef unless $self->{store};
-	%{$self->{store}} = ();
+	my $self  = shift;
+	my $store = $self->store or return undef;
+	foreach my $key ( keys %$store ) {
+		delete $store->{$key};
+	}
 	1;
 }
 

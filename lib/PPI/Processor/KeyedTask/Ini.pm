@@ -175,7 +175,8 @@ sub _check_file {
 sub _write_file {
 	my $self = shift;
 	return 1 unless $self->{file};
-	$self->store->write( $self->{file} );
+	my $store = $self->{store} or return undef;
+	$store->write( $self->{file} );
 }
 
 1;

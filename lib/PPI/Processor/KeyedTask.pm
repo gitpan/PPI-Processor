@@ -159,7 +159,7 @@ sub store_file {
 	return undef unless ref $hash eq 'HASH';
 
 	# Add the hash entries to the result store entry for that file
-	my $store = $self->store;
+	my $store = $self->store or return undef;
 	$store->{$file} = {} unless $store->{$file};
 	foreach ( keys %$hash ) {
 		$store->{$file}->{$_} = $hash->{$_};
@@ -183,7 +183,7 @@ sub flush_file {
 	my ($self, $file) = @_;
 
 	# Remove the entry from the store
-	my $store = $self->store;
+	my $store = $self->store or return undef;
 	delete $store->{$file};
 
 	1;

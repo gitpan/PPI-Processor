@@ -37,7 +37,7 @@ use PPI::Document        ();
 
 use vars qw{$VERSION $errstr};
 BEGIN {
-	$VERSION = '0.12';
+	$VERSION = '0.13';
 	$errstr  = '';
 }
 
@@ -72,7 +72,7 @@ that are to be processed.
 If not provided, a default File::Find::Rule object will be used that
 processes all .pm files contained in the source directory.
 
-=item flushstate
+=item flush_results
 
 Some Task classes (generally the parellel-capable ones that generate
 information on a per-file basis) support incremental state.
@@ -80,7 +80,7 @@ information on a per-file basis) support incremental state.
 That is, they are able to determine if they have previously calculated
 a result for a file, and skip it.
 
-Setting flushstate to true (false by default) will force any of these
+Setting flush_results to true (false by default) will force any of these
 shared states to be reset before the processing run starts.
 
 =item before_file
@@ -125,9 +125,9 @@ sub new {
 
 	# Create the basic processor object
 	my $self = bless {
-		source     => $params{source},
-		tasks      => [],
-		flushstore => !! $params{flushstore},
+		source        => $params{source},
+		tasks         => [],
+		flush_results => !! $params{flush_results},
 		}, $class;
 
 	# Check and set the callbacks
@@ -172,14 +172,14 @@ sub source { $_[0]->{source} }
 
 =pod
 
-=head2 flushstore
+=head2 flush_results
 
-The C<flushstore> accessor method returns the setting for the argument
+The C<flush_results> accessor method returns the setting for the argument
 of the same name provided to the constructor.
 
 =cut
 
-sub flushstore { $_[0]->{flushstore} }
+sub flush_results { $_[0]->{flush_results} }
 
 
 
@@ -216,6 +216,11 @@ sub add_task {
 	# Initialise the store
 	$Task->init_store or return undef;
 
+	# Flush the store if flush_results is enabled
+	if ( $self->{flush_results} ) {
+		$Task->flush_store or return undef;
+	}
+
 	# Add the Task
 	push @{$self->{tasks}}, $Task;
 
@@ -244,18 +249,18 @@ sub run {
 	$self->init or return undef;
 
 	# Start the main loop
-	foreach my $file ( @{$self->{files}} ) {
-		my $path = File::Spec->catfile( $self->{source}, $file );
+	foreach my $path ( @{$self->{files}} ) {
+		my $file = File::Spec->catfile( $self->{source}, $path );
 
 		# Trigger the before_file callback if needed
 		if ( defined $self->{before_file} ) {
-			next unless $self->{before_file}->( $file, $path );
+			next unless $self->{before_file}->( $path, $file );
 		}
 
 		# Prepare the shared Document object if needed
 		my $Document = '';
 		if ( $self->{pool_documents} ) {
-			$Document = PPI::Document->load($path);
+			$Document = PPI::Document->load($file);
 		}
 	
 		# Iterate over the Tasks
@@ -270,22 +275,14 @@ sub run {
 				}
 			} else {
 				# We don't need or want to use process_document
-				$rv = $Task->process_file($path, $file);
+				$rv = $Task->process_file($file, $path);
 			}
 		}
 
 		# Trigger the after_file callback if needed
 		if ( defined $self->{after_file} ) {
-			$self->{after_file}->( $file, $path );
-		}
-
-		# Support the limit option
-		if ( $self->{limit} ) {
-			if ( --$self->{limit} < 1 ) {
-				return scalar @{$self->{files}};
-			}
-		}
-				
+			$self->{after_file}->( $path, $file );
+		}		
 	}
 
 	# End of the main loop.
@@ -315,13 +312,22 @@ sub init {
 	my @files = $self->{find}->relative->in( $self->{source} )
 		or return $self->_error("Failed to find any files to process in '$self->{source}'");
 	@files = sort @files;
-	$self->{files} = \@files;
+
+	# Support the limit option
+	if ( $self->{limit} and $self->{limit} > 0 ) {
+		# Only needed if the source set is too large
+		if ( @files > $self->{limit} ) {
+			### FIXME - Add trace message here once trace support added
+			@files = @files[1 .. $self->{limit}];
+		}
+	}
 
 	# Do we want to use pooled document objects?
 	my $want_document = scalar grep { $_->can('process_document') } @{$self->{tasks}};
 	$self->{pool_documents} = 1 if $want_document >= 2;
 
-	# Set the state flag and return
+	# Clean up and return true
+	$self->{files} = \@files;
 	$self->{active} = 1;
 }
 

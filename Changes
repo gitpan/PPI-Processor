@@ -1,5 +1,10 @@
 Revision history for Perl extension PPI::Processor
 
+0.13 Tue Jan 11 2005
+	- Refactored the 'limit' functionality to do it cleaner, earlier and more
+	  compatibly with trace messages (once we add support for them).
+	- Cleaned up the flush_results code.
+
 0.12 Mon Jan 10 2005
 	- Pass the relative path in and around the tasks as well as the absolute path
 	- Added no_index( directory => 't.data' ) to Makefile.PL to keep PAUSE indexer happy
