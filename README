@@ -55,6 +55,13 @@ METHODS
 
         The return value is ignored.
 
+    limit
+        The "limit" option is an integer value indicating the maximum number
+        of files to be processed in a single process (mainly to mitigate any
+        potential leaks in PPI).
+
+        If set to default, will parse any number.
+
     Returns a new PPI::Processor object, or "undef" on error.
 
   source

@@ -1,5 +1,8 @@
 Revision history for Perl extension PPI::Processor
 
+0.09 Mon Jan 10 2005
+	- Added support for the 'limit' option
+
 0.08 Sun Jan  9 2005
 	- Fixed another bug in PPI::Processor
 	- Added the before_file and after_file callbacks

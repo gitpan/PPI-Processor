@@ -30,7 +30,7 @@ use PPI::Document        ();
 
 use vars qw{$VERSION $errstr};
 BEGIN {
-	$VERSION = '0.08';
+	$VERSION = '0.09';
 	$errstr  = '';
 }
 
@@ -92,6 +92,14 @@ the file is processed.
 
 The return value is ignored.
 
+=item limit
+
+The C<limit> option is an integer value indicating the maximum
+number of files to be processed in a single process (mainly to mitigate
+any potential leaks in PPI).
+
+If set to default, will parse any number.
+
 =back
 
 Returns a new PPI::Processor object, or C<undef> on error.
@@ -127,6 +135,11 @@ sub new {
 			return $class->_error("Callback 'after_file' is not a CODE reference");
 		}
 		$self->{after_file} = $params{after_file};
+	}
+
+	# Support limits
+	if ( defined $params{limit} and $params{limit} > 0 ) {
+		$self->{limit} = $params{limit};
 	}
 
 	# Set the file search
@@ -258,6 +271,14 @@ sub run {
 		if ( defined $self->{after_file} ) {
 			$self->{after_file}->( $file, $path );
 		}
+
+		# Support the limit option
+		if ( $self->{limit} ) {
+			if ( --$self->{limit} < 1 ) {
+				return scalar @{$self->{files}};
+			}
+		}
+				
 	}
 
 	# End of the main loop.
