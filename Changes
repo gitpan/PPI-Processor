@@ -1,5 +1,10 @@
 Revision history for Perl extension PPI::Processor
 
+0.03 Wed Dec 29 2004
+	- Changed the Task API to make it more flexible
+	- Added the first version of the simpler PPI::Processor::KeyedTask
+	- Various other small bug fixes
+
 0.02 Tue Dec 28 2004
 	- Added the ->source accessor method
 	- Added missing documentation for the ->new constructor

@@ -27,11 +27,10 @@ use UNIVERSAL 'isa';
 use Class::Inspector     ();
 use File::Find::Rule     ();
 use PPI::Document        ();
-use PPI::Processor::Task ();
 
 use vars qw{$VERSION $errstr};
 BEGIN {
-	$VERSION = '0.02';
+	$VERSION = '0.04';
 	$errstr  = '';
 }
 
@@ -44,7 +43,7 @@ BEGIN {
 
 =pod
 
-=head2 new source => $source
+=head2 new %args
 
 The C<new> constructor creates a new Processor object. It takes as argument
 a set of name => value pairs. The base class accepts two named parameters.
@@ -66,6 +65,17 @@ that are to be processed.
 If not provided, a default File::Find::Rule object will be used that
 processes all .pm files contained in the source directory.
 
+=item flushstate
+
+Some Task classes (generally the parellel-capable ones that generate
+information on a per-file basis) support incremental state.
+
+That is, they are able to determine if they have previously calculated
+a result for a file, and skip it.
+
+Setting flushstate to true (false by default) will force any of these
+shared states to be reset before the processing run starts.
+
 =back
 
 Returns a new PPI::Processor object, or C<undef> on error.
@@ -84,8 +94,9 @@ sub new {
 
 	# Create the basic processor object
 	my $self = bless {
-		source => $params{source},
-		tasks  => [],
+		source     => $params{source},
+		tasks      => [],
+		flushstore => !! $params{flushstore},
 		}, $class;
 
 	# Set the file search
@@ -109,6 +120,17 @@ object was created with.
 
 sub source { $_[0]->{source} }
 
+=pod
+
+=head2 flushstore
+
+The C<flushstore> accessor method returns the setting for the argument
+of the same name provided to the constructor.
+
+=cut
+
+sub flushstore { $_[0]->{flushstore} }
+
 
 
 
@@ -131,21 +153,20 @@ method will be checked, and an object will be created if the Task
 class supports autoconstruct.
 
 While adding the Task object, the Processor will also initialize the
-state hash for the Task.
+store for the Task.
 
 Returns true if the Task is added, or C<undef> on error.
 
 =cut
 
 sub add_task {
-	my $self = shift;
-	$self->_clear;
+	my $self = shift->_clear;
 	my $Task = $self->_Task(shift) or return undef;
 
-	# Initialise the Task's state
+	# Initialise the Task's store
 	### FIXME - Modifying the Task's internals directly is a little
 	###         dubious. We should find a cleaner way to do this.
-	$Task->{state} = {};
+	$Task->{store} = {};
 
 	# Add the Task
 	push @{$self->{tasks}}, $Task;
@@ -223,8 +244,7 @@ Returns true on success, or C<undef> on error.
 =cut
 
 sub init {
-	my $self = shift;
-	$self->_clear;
+	my $self = shift->_clear;
 
 	# Populate the files, and return an error
 	# if we don't find at least one file to process.
@@ -234,9 +254,7 @@ sub init {
 
 	# Do we want to use pooled document objects?
 	my $want_document = scalar grep { $_->can('process_document') } @{$self->{tasks}};
-	if ( $want_document >= 2 ) {
-		$self->{pool_documents} = 1;
-	}
+	$self->{pool_documents} = 1 if $want_document >= 2;
 
 	# Set the state flag and return
 	$self->{active} = 1;
@@ -297,9 +315,11 @@ sub _error {
 	undef;
 }
 
-# Clear the error message
+# Clear the error message.
+# Returns the object as a convenience.
 sub _clear {
-	$errstr = '';	
+	$errstr = '';
+	$_[0];
 }
 
 # Fetch the error message

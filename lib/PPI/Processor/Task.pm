@@ -22,7 +22,7 @@ use PPI::Document ();
 
 use vars qw{$VERSION};
 BEGIN {
-	$VERSION = '0.02';
+	$VERSION = '0.04';
 }
 
 
@@ -59,7 +59,7 @@ sub new {
 
 =head2 autoconstruct
 
-Many simple Tasks do not require any construcor arguments, and can be
+Many simple Tasks do not require any constructor arguments, and can be
 simply created as-needed by the processor.
 
 If the static method autoconstruct returns true, the Processor will
@@ -79,33 +79,75 @@ sub autoconstruct { 1 }
 
 
 
+
 #####################################################################
 # PPI::Processor::Task Main Methods
 
 =pod
 
-=head2 state
+=head2 get_store
 
-All Tasks use an anonymous hash to store their run-time state, although
-the actual location of where it is stored will vary depending on the
-implementation of the particular processor.
+All Tasks need something in which to store their results. The actual
+location of where it is stored will vary depending on the
+implementation of the particular Task.
 
-The C<state> method is used to access this hash, returning a reference to
-it which you may modify directly.
+The C<get_store> method is used to access the data store for each Task,
+returning a reference to it which you may modify directly.
 
-Returns a reference to a HASH, or dies on error.
+In the simplest case, returns a reference to a HASH. More complex
+Tasks may use a tied object or a database connector or some other
+mechanism.
 
 =cut
 
-sub state {
+sub get_store {
 	my $self = shift;
 
 	# Handle the most common cases
-	if ( ref $self->{state} eq 'HASH' ) {
-		return $self->{state};
-	}
+	exists $self->{store}
+		? $self->{store}
+		: die "Unable to locate the Task's result store";
+}
 
-	die 'Unable to locate Task state hash';
+=pod
+
+=head2 init_store
+
+Before a processing run can commence, each Task has the opportunity
+to initialise their result stores. The C<init_store> 
+
+Returns true if the result store is initialised or connected to, or
+false otherwise.
+
+=cut
+
+sub init_store {
+	my $self = shift;
+	$self->{store} = {};
+	1;	
+}
+
+=pod
+
+=head2 flush_store
+
+Some Tasks, particularly database-backed parellel-capable ones,
+store their state outside the context of a single run of a Processor.
+
+In these cases, the C<flush_store> method is intented to clear away
+any and all previous result data and reset the result store for use.
+
+This method is called, if needed, AFTER the C<init_store> method.
+
+Returns true if the result store is flushed, or false otherwise.
+
+=cut
+
+sub flush_store {
+	my $self = shift;
+	return undef unless $self->{store};
+	%{$self->{store}} = ();
+	1;
 }
 
 =pod
@@ -147,12 +189,12 @@ sub process_file {
 	my $Document = PPI::Document->load($file) or return '';
 
 	# Hand off to the next method
-	$self->process_document( $Document );
+	$self->process_document( $Document, $file );
 }
 
 =pod
 
-=head2 process_document $Document
+=head2 process_document $Document, $file
 
 The C<process_document> method should be implemented by Tasks that wish
 to work only with fully parsed documents, and are not concerned about
@@ -160,7 +202,8 @@ documents that fail to load.
 
 In order to improve the speed of the Processor, any Task that uses
 process_document must also guarentee that it will not modify the
-Document object passed to it (although it may clone it).
+Document object passed to it (although it may clone it and subsequently
+modify THAT version).
 
 This is because in some situations the Processor may cache the Document
 object and pass it to each of several different Tasks for processing.
