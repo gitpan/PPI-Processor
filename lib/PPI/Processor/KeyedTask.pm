@@ -39,7 +39,7 @@ use base 'PPI::Processor::Task';
 
 use vars qw{$VERSION};
 BEGIN {
-	$VERSION = '0.12';
+	$VERSION = '0.14';
 }
 
 # Requires arguments, and therefore cannot autoconstruct

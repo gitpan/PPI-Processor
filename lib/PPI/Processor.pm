@@ -37,7 +37,7 @@ use PPI::Document        ();
 
 use vars qw{$VERSION $errstr};
 BEGIN {
-	$VERSION = '0.13';
+	$VERSION = '0.14';
 	$errstr  = '';
 }
 
@@ -72,6 +72,18 @@ that are to be processed.
 If not provided, a default File::Find::Rule object will be used that
 processes all .pm files contained in the source directory.
 
+=item trace
+
+The C<trace> option (disabled by default) causes trace/debugging messages to
+be printed to STDOUT as the processing run processes.
+
+=item trace_summary
+
+For large and very long running processes, enabling the C<trace_summary>
+option (disabled by default) will cause an addition job summary to be
+printed at roughly minute interval summarising the current status of the
+processing job.
+
 =item flush_results
 
 Some Task classes (generally the parellel-capable ones that generate
@@ -82,22 +94,6 @@ a result for a file, and skip it.
 
 Setting flush_results to true (false by default) will force any of these
 shared states to be reset before the processing run starts.
-
-=item before_file
-
-The optional C<before_file> callback, provided as a CODE reference,
-will be passed the relative and full filenames immediately before
-the file is processed.
-
-The file will be skipped if the callback returns false.
-
-=item after_file
-
-The optional C<after_file> callback, provided as a CODE reference,
-will be passed the relative and full filenames immediately after
-the file is processed.
-
-The return value is ignored.
 
 =item limit
 
@@ -118,40 +114,31 @@ sub new {
 	$class->_clear;
 
 	# Check the source
-	my %params = @_;
-	unless ( $params{source} and -d $params{source} ) {
+	my %args = @_;
+	unless ( $args{source} and -d $args{source} ) {
 		return $class->_error("Source is not a valid directory");
 	}
 
 	# Create the basic processor object
 	my $self = bless {
-		source        => $params{source},
+		source        => $args{source},
 		tasks         => [],
-		flush_results => !! $params{flush_results},
 		}, $class;
 
-	# Check and set the callbacks
-	if ( $params{before_file} ) {
-		unless ( ref $params{before_file} eq 'CODE' ) {
-			return $class->_error("Callback 'before_file' is not a CODE reference");
-		}
-		$self->{before_file} = $params{before_file};
-	}
-	if ( $params{after_file} ) {
-		unless ( ref $params{after_file} eq 'CODE' ) {
-			return $class->_error("Callback 'after_file' is not a CODE reference");
-		}
-		$self->{after_file} = $params{after_file};
-	}
+	# Handle optional parameters
+	$self->{trace}         = 1 if $args{trace};
+	$self->{trace_summary} = 1 if $args{trace_summary};
+	$self->{flush_results} = 1 if $args{flush_results};
+	delete $self->{trace_summary} unless $self->{trace};
 
 	# Support limits
-	if ( defined $params{limit} and $params{limit} > 0 ) {
-		$self->{limit} = $params{limit};
+	if ( defined $args{limit} and $args{limit} > 0 ) {
+		$self->{limit} = $args{limit};
 	}
 
 	# Set the file search
-	$self->{find} = isa($params{find}, 'File::Find::Rule')
-		? $params{find}
+	$self->{find} = isa($args{find}, 'File::Find::Rule')
+		? $args{find}
 		: File::Find::Rule->new
 		                  ->file
 		                  ->name('*.pm');
@@ -169,17 +156,6 @@ object was created with.
 =cut
 
 sub source { $_[0]->{source} }
-
-=pod
-
-=head2 flush_results
-
-The C<flush_results> accessor method returns the setting for the argument
-of the same name provided to the constructor.
-
-=cut
-
-sub flush_results { $_[0]->{flush_results} }
 
 
 
@@ -244,27 +220,35 @@ Returns C<undef> if a fatal processing error occured during the run.
 
 sub run {
 	my $self = shift;
+	local $| = 1;
 
 	# Initialise the processing engine
 	$self->init or return undef;
 
 	# Start the main loop
+	my $completed = -1;
+	$self->trace("Running processor job for " . scalar(@{$self->{files}}) . " files...\n");
 	foreach my $path ( @{$self->{files}} ) {
-		my $file = File::Spec->catfile( $self->{source}, $path );
+		# Show the process summary if needed
+		$self->_trace_summary( ++$completed );
+		$self->trace("Processing $path");
 
-		# Trigger the before_file callback if needed
-		if ( defined $self->{before_file} ) {
-			next unless $self->{before_file}->( $path, $file );
-		}
+		# Get the full path to the file
+		my $file = File::Spec->catfile( $self->{source}, $path );
 
 		# Prepare the shared Document object if needed
 		my $Document = '';
 		if ( $self->{pool_documents} ) {
 			$Document = PPI::Document->load($file);
+			unless ( $Document ) {
+				$self->trace(' error\n');
+				next;
+			}
 		}
 	
 		# Iterate over the Tasks
 		foreach my $Task ( @{$self->{tasks}} ) {
+			$self->trace('... ');
 			my $rv;
 			if ( $self->{pool_documents} and $Task->can('process_document') ) {
 				if ( $Document ) {
@@ -277,15 +261,16 @@ sub run {
 				# We don't need or want to use process_document
 				$rv = $Task->process_file($file, $path);
 			}
+
+			# Show the results
+			$self->trace($rv ? 'done' : defined($rv) ? 'skipped' : 'error');
 		}
 
-		# Trigger the after_file callback if needed
-		if ( defined $self->{after_file} ) {
-			$self->{after_file}->( $path, $file );
-		}		
+		$self->trace("\n");
 	}
 
 	# End of the main loop.
+	$self->trace("Processor job complete\n");
 	scalar @{$self->{files}};
 }
 
@@ -309,15 +294,18 @@ sub init {
 
 	# Populate the files, and return an error
 	# if we don't find at least one file to process.
+	$self->trace("Search for files...");
 	my @files = $self->{find}->relative->in( $self->{source} )
 		or return $self->_error("Failed to find any files to process in '$self->{source}'");
+	$self->trace(" found " . scalar(@files) . " files\n");
 	@files = sort @files;
 
 	# Support the limit option
 	if ( $self->{limit} and $self->{limit} > 0 ) {
 		# Only needed if the source set is too large
 		if ( @files > $self->{limit} ) {
-			### FIXME - Add trace message here once trace support added
+			$self->trace("Limiting to first $self->{limit} only (limit enabled)\n");
+			$self->trace("Ending at $files[$self->{limit}]\n");
 			@files = @files[1 .. $self->{limit}];
 		}
 	}
@@ -325,6 +313,11 @@ sub init {
 	# Do we want to use pooled document objects?
 	my $want_document = scalar grep { $_->can('process_document') } @{$self->{tasks}};
 	$self->{pool_documents} = 1 if $want_document >= 2;
+
+	# Initialize the trace summary if needed
+	if ( $self->{trace_summary}  ) {
+		$self->{trace_summary_start} = $self->{trace_summary_last} = time;
+	}
 
 	# Clean up and return true
 	$self->{files} = \@files;
@@ -337,6 +330,49 @@ sub init {
 
 #####################################################################
 # Support and Error Handling
+
+=pod
+
+=head2 trace $message
+
+Prints out a trace/debug message, if they are enabled
+
+=cut
+
+sub trace {
+	my ($self, $message) = @_;
+	print "$message" if $self->{trace};
+}
+
+# Generate the per-minute summary if needed
+sub _trace_summary {
+	my ($self, $completed) = @_;
+	return 1 unless $self->{trace_summary};
+
+	# Do we need to show a summary yet?
+	my $now      = time;
+	my $interval = $now - $self->{trace_summary_last};
+	return 1 if $interval < 60;
+
+	# Calculate some additional values
+	my $files     = scalar @{$self->{files}};
+	my $expired   = $now - $self->{trace_summary_start};
+	my $remaining = int($expired * ($files - $completed) / $completed);
+	my $hours   = int($remaining / 3600);
+	my $minutes = int(($remaining % 3600) / 60);
+	my $seconds = $remaining % 60;
+	my $eta     = $hours ? sprintf("%dh %02dm %02ds", $hours, $minutes, $seconds)
+		: $minutes ? sprintf("%dm %02ds", $minutes, $seconds)
+		: sprintf("%ds", $seconds);
+
+	# Generate and show the summary
+	$self->trace("\n");
+	$self->trace("Job Status Update: Completed $completed of $files - ETA $eta\n");
+	$self->trace("\n");
+
+	# Update the last time
+	$self->{trace_summary_last} = $now;
+}
 
 sub _Task {
 	my $either = shift;

@@ -1,5 +1,12 @@
 Revision history for Perl extension PPI::Processor
 
+0.14 Tue Jan 11 2005
+	- Removed before_file and after_file, which were only being used for tracing
+	- Added proper tracing support, cloned from CPAN::Processor, and done in
+	  the same style as it.
+	- Added trace_summary support, which adds a job status and ETA message
+	  to the normal trace output once a minute.
+
 0.13 Tue Jan 11 2005
 	- Refactored the 'limit' functionality to do it cleaner, earlier and more
 	  compatibly with trace messages (once we add support for them).

@@ -37,6 +37,16 @@ METHODS
         If not provided, a default File::Find::Rule object will be used that
         processes all .pm files contained in the source directory.
 
+    trace
+        The "trace" option (disabled by default) causes trace/debugging
+        messages to be printed to STDOUT as the processing run processes.
+
+    trace_summary
+        For large and very long running processes, enabling the
+        "trace_summary" option (disabled by default) will cause an addition
+        job summary to be printed at roughly minute interval summarising the
+        current status of the processing job.
+
     flush_results
         Some Task classes (generally the parellel-capable ones that generate
         information on a per-file basis) support incremental state.
@@ -46,20 +56,6 @@ METHODS
 
         Setting flush_results to true (false by default) will force any of
         these shared states to be reset before the processing run starts.
-
-    before_file
-        The optional "before_file" callback, provided as a CODE reference,
-        will be passed the relative and full filenames immediately before
-        the file is processed.
-
-        The file will be skipped if the callback returns false.
-
-    after_file
-        The optional "after_file" callback, provided as a CODE reference,
-        will be passed the relative and full filenames immediately after the
-        file is processed.
-
-        The return value is ignored.
 
     limit
         The "limit" option is an integer value indicating the maximum number
@@ -73,10 +69,6 @@ METHODS
   source
     The "source" accessor method returns the source directory that the
     object was created with.
-
-  flush_results
-    The "flush_results" accessor method returns the setting for the argument
-    of the same name provided to the constructor.
 
   add_task $Task
     The "add_task" method is used to add a Task to the Processor object
@@ -112,6 +104,9 @@ METHODS
     to be processed, setting some state flags, and other tasks.
 
     Returns true on success, or "undef" on error.
+
+  trace $message
+    Prints out a trace/debug message, if they are enabled
 
   errstr
     For any error that occurs, you can use the "errstr", as either a static
