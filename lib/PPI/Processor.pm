@@ -30,7 +30,7 @@ use PPI::Document        ();
 
 use vars qw{$VERSION $errstr};
 BEGIN {
-	$VERSION = '0.07';
+	$VERSION = '0.08';
 	$errstr  = '';
 }
 
@@ -76,6 +76,22 @@ a result for a file, and skip it.
 Setting flushstate to true (false by default) will force any of these
 shared states to be reset before the processing run starts.
 
+=item before_file
+
+The optional C<before_file> callback, provided as a CODE reference,
+will be passed the relative and full filenames immediately before
+the file is processed.
+
+The file will be skipped if the callback returns false.
+
+=item after_file
+
+The optional C<after_file> callback, provided as a CODE reference,
+will be passed the relative and full filenames immediately after
+the file is processed.
+
+The return value is ignored.
+
 =back
 
 Returns a new PPI::Processor object, or C<undef> on error.
@@ -98,6 +114,20 @@ sub new {
 		tasks      => [],
 		flushstore => !! $params{flushstore},
 		}, $class;
+
+	# Check and set the callbacks
+	if ( $params{before_file} ) {
+		unless ( ref $params{before_file} eq 'CODE' ) {
+			return $class->_error("Callback 'before_file' is not a CODE reference");
+		}
+		$self->{before_file} = $params{before_file};
+	}
+	if ( $params{after_file} ) {
+		unless ( ref $params{after_file} eq 'CODE' ) {
+			return $class->_error("Callback 'after_file' is not a CODE reference");
+		}
+		$self->{after_file} = $params{after_file};
+	}
 
 	# Set the file search
 	$self->{find} = isa($params{find}, 'File::Find::Rule')
@@ -163,10 +193,8 @@ sub add_task {
 	my $self = shift->_clear;
 	my $Task = $self->_Task(shift) or return undef;
 
-	# Initialise the Task's store
-	### FIXME - Modifying the Task's internals directly is a little
-	###         dubious. We should find a cleaner way to do this.
-	$Task->{store} = {};
+	# Initialise the store
+	$Task->init_store or return undef;
 
 	# Add the Task
 	push @{$self->{tasks}}, $Task;
@@ -199,12 +227,17 @@ sub run {
 	foreach my $file ( @{$self->{files}} ) {
 		my $path = File::Spec->catfile( $self->{source}, $file );
 
+		# Trigger the before_file callback if needed
+		if ( defined $self->{before_file} ) {
+			next unless $self->{before_file}->( $file, $path );
+		}
+
 		# Prepare the shared Document object if needed
 		my $Document = '';
 		if ( $self->{pool_documents} ) {
 			$Document = PPI::Document->load($path);
 		}
-
+	
 		# Iterate over the Tasks
 		foreach my $Task ( @{$self->{tasks}} ) {
 			my $rv;
@@ -219,8 +252,11 @@ sub run {
 				# We don't need or want to use process_document
 				$rv = $Task->process_file($path);
 			}
+		}
 
-			### FIXME - Add support for callbacks
+		# Trigger the after_file callback if needed
+		if ( defined $self->{after_file} ) {
+			$self->{after_file}->( $file, $path );
 		}
 	}
 

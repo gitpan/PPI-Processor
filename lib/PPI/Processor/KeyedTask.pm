@@ -39,7 +39,7 @@ use base 'PPI::Processor::Task';
 
 use vars qw{$VERSION};
 BEGIN {
-	$VERSION = '0.07';
+	$VERSION = '0.08';
 }
 
 # Requires arguments, and therefore cannot autoconstruct
@@ -226,6 +226,7 @@ sub process_document {
 	my %results = map { $_ => undef } keys %tasks;
 	foreach my $task ( sort keys %tasks ) {
 		eval {
+			local $_ = $filename;
 			$results{$task} = $tasks{$task}->($Document, $filename);
 		};
 		last if $@; # Skip the rest of the tests on error

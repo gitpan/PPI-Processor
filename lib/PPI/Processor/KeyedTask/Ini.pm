@@ -43,7 +43,7 @@ use Config::Tiny ();
 
 use vars qw{$VERSION};
 BEGIN {
-	$VERSION = '0.07';
+	$VERSION = '0.08';
 }
 
 
@@ -119,8 +119,15 @@ sub end_store {
 	# Save the file if we know where to write to
 	if ( $self->{file} and -w $self->{file} ) {
 		$self->store->write( $self->{file} ) or return undef;
+		$self->{end_store} = 1;
 	}
 
+	1;
+}
+
+# Automatically write the results on a premature destroy
+sub DESTROY {
+	$_[0]->end_store unless $_[0]->{end_store};
 	1;
 }
 

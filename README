@@ -41,6 +41,20 @@ METHODS
         Setting flushstate to true (false by default) will force any of
         these shared states to be reset before the processing run starts.
 
+    before_file
+        The optional "before_file" callback, provided as a CODE reference,
+        will be passed the relative and full filenames immediately before
+        the file is processed.
+
+        The file will be skipped if the callback returns false.
+
+    after_file
+        The optional "after_file" callback, provided as a CODE reference,
+        will be passed the relative and full filenames immediately after the
+        file is processed.
+
+        The return value is ignored.
+
     Returns a new PPI::Processor object, or "undef" on error.
 
   source
