@@ -17,7 +17,7 @@ BEGIN {
 	}
 }
 
-use Test::More tests => 4;
+use Test::More tests => 5;
 
 
 
@@ -27,8 +27,9 @@ use Test::More tests => 4;
 ok( $] >= 5.005, "Your perl is new enough" );
 
 # Does the module load
-use_ok( 'PPI::Processor'            );
-use_ok( 'PPI::Processor::Task'      );
-use_ok( 'PPI::Processor::KeyedTask' );
+use_ok( 'PPI::Processor'                 );
+use_ok( 'PPI::Processor::Task'           );
+use_ok( 'PPI::Processor::KeyedTask'      );
+use_ok( 'PPI::Processor::KeyedTask::Ini' );
 
 exit();

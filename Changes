@@ -1,5 +1,9 @@
 Revision history for Perl extension PPI::Processor
 
+0.04 Fri Dec 31 2004
+	- Implemented PPI::Processor::KeyedTask::Ini
+	- Got the last of PPI::Processor::KeyedTask implemented for the default cases
+
 0.03 Wed Dec 29 2004
 	- Changed the Task API to make it more flexible
 	- Added the first version of the simpler PPI::Processor::KeyedTask

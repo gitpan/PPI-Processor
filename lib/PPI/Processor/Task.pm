@@ -22,7 +22,7 @@ use PPI::Document ();
 
 use vars qw{$VERSION};
 BEGIN {
-	$VERSION = '0.04';
+	$VERSION = '0.05';
 }
 
 
@@ -42,6 +42,8 @@ a Processor for execution.
 Although any number of parameters may be required to be passed to the Task
 constructor, by default C<new> is implemented for you as an empty
 constructor that creates an empty (although valid) object.
+
+Returns a new PPI::Processor::Task object, or C<undef> on error.
 
 =cut
 
@@ -85,13 +87,13 @@ sub autoconstruct { 1 }
 
 =pod
 
-=head2 get_store
+=head2 store
 
 All Tasks need something in which to store their results. The actual
 location of where it is stored will vary depending on the
 implementation of the particular Task.
 
-The C<get_store> method is used to access the data store for each Task,
+The C<store> method is used to access the data store for each Task,
 returning a reference to it which you may modify directly.
 
 In the simplest case, returns a reference to a HASH. More complex
@@ -100,7 +102,7 @@ mechanism.
 
 =cut
 
-sub get_store {
+sub store {
 	my $self = shift;
 
 	# Handle the most common cases
@@ -147,6 +149,26 @@ sub flush_store {
 	my $self = shift;
 	return undef unless $self->{store};
 	%{$self->{store}} = ();
+	1;
+}
+
+=pod
+
+=head2 end_store
+
+The C<end_store> method completements the C<init_store> method, and 
+is used to clean up, disconnect, save, or otherwise "finish" the use
+of the store at the end of a run.
+
+Returns true if the store is finished successfully, or false otherwise.
+
+=cut
+
+# Do nothing in the default case.
+# Since we don't save our hash, we don't want to just throw all that
+# data away at the end of a run.
+sub end_store {
+	my $self = shift;
 	1;
 }
 

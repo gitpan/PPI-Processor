@@ -39,7 +39,75 @@ use base 'PPI::Processor::Task';
 
 use vars qw{$VERSION};
 BEGIN {
-	$VERSION = '0.01';
+	$VERSION = '0.05';
+}
+
+
+
+
+
+#####################################################################
+# Constructor
+
+=pod
+
+=head2 new %args
+
+The C<new> constructor takes a set of paired arguments and largely
+passes them on to the default L<PPI::Processor::Task> constructor.
+
+It accepts one additional argument other than the default
+
+=over
+
+=item tasks
+
+The C<tasks> argument should be a hash of named subtask. Each key should
+be a simple word, and each value can be one of three things.
+
+  'Module::Name::function'
+
+A string in this format will cause the task to be done by calling the named
+function, passing it the L<PPI::Document> object as the first argument.
+
+  'Module::Name->method'
+
+A string in this form will cause the task to be done by calling the named
+static method, passing it the L<PPI::Document> object as the first argument.
+Please note that the string is not evaluated, the notation is merely used
+to indicate that it is a method.
+
+  &coderef
+
+Any anonymous subroutine reference provided as a task will be called
+directly, and is passed the L<PPI::Document> object as the first argument.
+
+=back
+
+Returns a new PPI::Processor::KeyedTask object, or C<undef> on error.
+
+=cut
+
+sub new {
+	my $class = ref $_[0] ? ref shift : shift;
+	my %args  = @_;
+
+	# Check the tasks
+	my $tasks = delete $args{tasks};
+	if ( $tasks ) {
+		return undef unless ref $tasks eq 'HASH';
+		foreach ( keys %$tasks ) {
+			$tasks->{$_} = $class->_compile_task($tasks->{$_}) or return undef;
+		}
+	}
+
+	# Create the object
+	my $self = $class->SUPER::new( %args ) or return undef;
+
+	# Add the tasks
+	$self->{tasks} = $tasks;
+
+	$self;
 }
 
 
@@ -48,6 +116,25 @@ BEGIN {
 
 #####################################################################
 # Main Methods
+
+=pod
+
+=head2 tasks
+
+The C<tasks> method returns a hash of the named tasks that need to be
+performed by the Task object. The list are to be performed in alpha-sorted
+order. As for unit test scripts, if the order is important they should be
+named 01task, 02task, 03task, etc etc.
+
+Returns a hash as a list, or the null list if no tasks can be determined.
+
+=cut
+
+sub tasks {
+	my $self = shift;
+	return () unless $self->{tasks};
+	map { $_ => $self->{tasks}->{$_} } sort keys %{$self->{tasks}};
+}
 
 =pod
 
@@ -68,8 +155,8 @@ sub store_file {
 
 	# Add the hash entries to the result store entry for that file
 	my $store = $self->store;
-	$store->{$file} ||= {};
-	foreach ( $hash ) {
+	$store->{$file} = {} unless $store->{$file};
+	foreach ( keys %$hash ) {
 		$store->{$file}->{$_} = $hash->{$_};
 	}
 
@@ -104,7 +191,41 @@ sub flush_file {
 #####################################################################
 # PPI::Processor::Task Methods
 
-# FIXME - Do we need to do anything here?
+sub process_document {
+	my $self     = shift;
+	my $Document = isa($_[0], 'PPI::Document') ? shift : return undef;
+	my $filename = shift;
+
+	# Hand off to each of the tasks
+	my %tasks   = $self->tasks or return undef;
+	my %results = map { $_ => undef } keys %tasks;
+	foreach my $task ( sort keys %tasks ) {
+		eval {
+			$results{$task} = $tasks{$task}->($Document);
+		};
+		last if $@; # Skip the rest of the tests on error
+	}
+
+	# Save the results
+	$self->store_file( $filename, \%results );
+}
+
+
+
+
+
+#####################################################################
+# Support Methods
+
+sub _compile_task {
+	my $either = shift;
+	my $task   = defined $_[0] ? shift : return undef;
+	return $task if ref $task eq 'CODE';
+	return undef if ref $task;
+	return undef unless $task =~ /^([^\W\d]\w*(?:::[^\W\d]\w*)*)(?:::|->)[^\W\d]\w*$/;
+	my $rv = eval "sub { require $1; return $task( $_ ); }";
+	$@ ? undef : $rv;
+}
 
 1;
 

@@ -7,6 +7,7 @@ version_from  ( 'lib/PPI/Processor.pm'        );
 license       ( 'perl'                        );
 
 requires      ( 'perl'             => '5.005' );
+requires      ( 'Config::Tiny'     => '2.00'  );
 requires      ( 'Class::Inspector' => '1.07'  );
 requires      ( 'File::Find::Rule' => '0.27'  );
 requires      ( 'PPI'              => '0.840' );
