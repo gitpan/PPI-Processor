@@ -18,6 +18,13 @@ By extending this class, it is intended to later implement a SMP,
 cluster, and/or distributed parrelel processing engine as well, using
 the same basic API.
 
+=head1 EXTENDING
+
+At this time the API is still drifting a little bit.
+
+If you wish to write Tasks or extensions, please stay in touch with the
+maintainer while doing so.
+
 =head1 METHODS
 
 =cut
@@ -30,7 +37,7 @@ use PPI::Document        ();
 
 use vars qw{$VERSION $errstr};
 BEGIN {
-	$VERSION = '0.10';
+	$VERSION = '0.11';
 	$errstr  = '';
 }
 

@@ -43,7 +43,7 @@ use Config::Tiny ();
 
 use vars qw{$VERSION};
 BEGIN {
-	$VERSION = '0.10';
+	$VERSION = '0.11';
 }
 
 
@@ -59,7 +59,7 @@ BEGIN {
 
 The C<new> constructor takes a set of named arguments in the same way
 as the main L<PPI::Processor::KeyedTask> constructor. However, it
-accepts an additional argument beyond the default set.
+accepts several additional arguments beyond the defaults.
 
 =over
 
@@ -70,6 +70,16 @@ that currently, or will, store the results of the task.
 
 It should be a location on the file-system for which the process has
 write permissions.
+
+=item incremental_write
+
+To handle situations in which the processor might be killed or suffer
+some other problem which would prevent the results from being written,
+you can provide the incremental_write value.
+
+If set to true, and you have provided a filename, the Task object will
+attempt to write to the config file every time it recieves a C<store_file>
+call.
 
 =back
 
@@ -88,6 +98,9 @@ sub new {
 
 	# Set the file
 	$self->{file} = $file;
+
+	# Do we want to store incrementally as we go?
+	$self->{incremental_write} = !! $args{incremental_write};
 
 	$self;
 }
@@ -114,13 +127,21 @@ sub init_store {
 sub end_store {
 	my $self = shift;
 
-	# Save the file if we know where to write to
-	if ( $self->{file} and -w $self->{file} ) {
-		$self->store->write( $self->{file} ) or return undef;
-		$self->{end_store} = 1;
+	# Save the file at end time
+	$self->_write_file or return undef;
+	$self->{end_store} = 1;
+}
+
+sub store_file {
+	my $self = shift;
+	$self->SUPER::store_file(@_) or return undef;
+
+	# Save the store now if needed
+	if ( $self->{incremental_write} ) {
+		$self->_write_file or return undef;
 	}
 
-	1;
+	1;	
 }
 
 # Automatically write the results on a premature destroy
@@ -137,14 +158,24 @@ sub DESTROY {
 # Support Methods
 
 sub _check_file {
-	my $file = $_[1];
+	my ($class, $file) = @_;
 	return 1 unless $file;
 	return 1 if -w $file;
+
+	# File does not exist.
+	# Can we write to the parent directory?
 	my ($v, $d, $f) = File::Spec->splitpath( $file );
 	my $dir = File::Spec->catpath( $v, $d );
 	return '' unless -e $dir;
 	return '' unless -d $dir;
 	return -w $dir;
+}
+
+# Write out the config object.
+sub _write_file {
+	my $self = shift;
+	return 1 unless $self->{file};
+	$self->store->write( $self->{file} );
 }
 
 1;

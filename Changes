@@ -1,5 +1,9 @@
 Revision history for Perl extension PPI::Processor
 
+0.11 Mon Jan 11 2005
+	- Added the 'incremental_write' option to PPI::Processor::KeyedTask::Ini
+	- Force 'force_expand' to true when 'missing_makefile_report' is provided
+
 0.10 Mon Jan 10 2005
 	- Allow ->add_task( $class, %params )
 	- Fixed a bug in PPI::Processor::KeyedTask::Ini::new caused by an
