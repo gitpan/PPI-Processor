@@ -1,0 +1,73 @@
+NAME
+    PPI::Processor - Implement a PPI Document processing engine
+
+DESCRIPTION
+    PPI::Processir provides a base class for implementing PPI-based Perl
+    Document Proccessing Engine.
+
+    This base class both provides a standard interface, and implements a
+    complete single-node engine.
+
+    By extending this class, it is intended to later implement a SMP,
+    cluster, and/or distributed parrelel processing engine as well, using
+    the same basic API.
+
+METHODS
+  add_task $Task
+    The "add_task" method is used to add a Task to the Processor object
+    before processing commences.
+
+    The parameter should be either an instantiated PPI::Processor::Task
+    object, or the same of a sub-class which is autoconstructable.
+
+    If passed a class name, the class will be loaded, the "autoconstruct"
+    method will be checked, and an object will be created if the Task class
+    supports autoconstruct.
+
+    While adding the Task object, the Processor will also initialize the
+    state hash for the Task.
+
+    Returns true if the Task is added, or "undef" on error.
+
+  run
+    The "run" method starts the main processor loop. It takes no arguments,
+    and the function will continue to load and process documents until it
+    has completed all matching documents within the document source.
+
+    Returns the total number of matching files, regardless of whether or not
+    they were skipped or actually processed by the various Tasks. Returns
+    "undef" if a fatal processing error occured during the run.
+
+  init
+    Given the size and complexity of many document processing tasks, the
+    "init" provides a convenient mechanism to prepare various things for the
+    main processing loop.
+
+    By default, this includes determining and storing the full list of files
+    to be processed, setting some state flags, and other tasks.
+
+    Returns true on success, or "undef" on error.
+
+SUPPORT
+    Bugs should always be submitted via the CPAN bug tracker
+
+    <http://rt.cpan.org/NoAuth/ReportBug.html?Queue=PPI%3A%3AProcessor>
+
+    For other issues, contact the maintainer
+
+AUTHOR
+    Adam Kennedy (Maintainer), <http://ali.as/>, cpan@ali.as
+
+    Funding provided by The Perl Foundation
+
+COPYRIGHT
+    Copyright (c) 2004 Adam Kennedy. All rights reserved. This program is
+    free software; you can redistribute it and/or modify it under the same
+    terms as Perl itself.
+
+    The full text of the license can be found in the LICENSE file included
+    with this module.
+
+SEE ALSO
+    PPI::Processor::Task, PPI
+
