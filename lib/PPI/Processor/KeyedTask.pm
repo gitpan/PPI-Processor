@@ -39,7 +39,7 @@ use base 'PPI::Processor::Task';
 
 use vars qw{$VERSION};
 BEGIN {
-	$VERSION = '0.06';
+	$VERSION = '0.07';
 }
 
 # Requires arguments, and therefore cannot autoconstruct
@@ -248,7 +248,7 @@ sub _compile_task {
 	return $task if ref $task eq 'CODE';
 	return undef if ref $task;
 	return undef unless $task =~ /^([^\W\d]\w*(?:::[^\W\d]\w*)*)(?:::|->)[^\W\d]\w*$/;
-	my $rv = eval "sub { require $1; return $task( $_ ); }";
+	my $rv = eval "sub { require $1; return $task( \$_ ); }";
 	$@ ? undef : $rv;
 }
 

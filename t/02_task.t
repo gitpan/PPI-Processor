@@ -17,7 +17,7 @@ BEGIN {
 	}
 }
 
-use Test::More tests => 11;
+use Test::More tests => 14;
 use PPI::Processor            ();
 use PPI::Processor::Task      ();
 use PPI::Processor::KeyedTask ();
@@ -52,6 +52,18 @@ is( $Task->flush_store, undef, '->flush_store returns false before init' );
 ok( $Task->init_store, '->init_store retrurns true' );
 ok( $Task->flush_store, '->flush_store returns true after init' );
 }
+
+
+
+
+
+# Check the task compiler for KeyedTasks
+{
+ok( $PPK->_compile_task( 'Foo::bar' ), '->_compile_task( "Foo::bar" ) doesnt fail' );
+ok( $PPK->_compile_task( 'Foo->bar' ), '->_compile_task( "Foo->bar" ) doesnt fail' );
+ok( $PPK->_compile_task( sub { 1 } ),  '->_compile_task( CODE ) doesnt fail' );
+}
+
 
 
 
