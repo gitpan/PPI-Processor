@@ -22,7 +22,7 @@ use PPI::Document ();
 
 use vars qw{$VERSION};
 BEGIN {
-	$VERSION = '0.14';
+	$VERSION = '0.15';
 }
 
 
@@ -207,7 +207,7 @@ sub process_file {
 	return '' unless $self->can('process_document');
 
 	# Load the Document or skip on failure
-	my $Document = PPI::Document->load($file) or return '';
+	my $Document = PPI::Document->new($file) or return '';
 
 	# Hand off to the next method
 	$self->process_document( $Document, $file, $path );
@@ -246,7 +246,7 @@ or C<undef> on error.
 
 Bugs should always be submitted via the CPAN bug tracker
 
-L<http://rt.cpan.org/NoAuth/ReportBug.html?Queue=PPI%3A%3AProcessor>
+L<http://rt.cpan.org/NoAuth/ReportBug.html?Queue=PPI-Processor>
 
 For other issues, contact the maintainer
 

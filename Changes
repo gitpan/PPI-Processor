@@ -1,5 +1,8 @@
 Revision history for Perl extension PPI::Processor
 
+0.15 Wed May 25 2005
+	- Updated to match API changes in PPI 0.990
+
 0.14 Tue Jan 11 2005
 	- Removed before_file and after_file, which were only being used for tracing
 	- Added proper tracing support, cloned from CPAN::Processor, and done in

@@ -37,7 +37,7 @@ use PPI::Document        ();
 
 use vars qw{$VERSION $errstr};
 BEGIN {
-	$VERSION = '0.14';
+	$VERSION = '0.15';
 	$errstr  = '';
 }
 
@@ -239,7 +239,7 @@ sub run {
 		# Prepare the shared Document object if needed
 		my $Document = '';
 		if ( $self->{pool_documents} ) {
-			$Document = PPI::Document->load($file);
+			$Document = PPI::Document->new($file);
 			unless ( $Document ) {
 				$self->trace(' error\n');
 				next;
@@ -446,7 +446,7 @@ sub errstr {
 
 Bugs should always be submitted via the CPAN bug tracker
 
-L<http://rt.cpan.org/NoAuth/ReportBug.html?Queue=PPI%3A%3AProcessor>
+L<http://rt.cpan.org/NoAuth/ReportBug.html?Queue=PPI-Processor>
 
 For other issues, contact the maintainer
 
@@ -459,6 +459,7 @@ Funding provided by The Perl Foundation
 =head1 COPYRIGHT
 
 Copyright (c) 2004 - 2005 Adam Kennedy. All rights reserved.
+
 This program is free software; you can redistribute
 it and/or modify it under the same terms as Perl itself.
 

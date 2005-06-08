@@ -43,7 +43,7 @@ use Config::Tiny ();
 
 use vars qw{$VERSION};
 BEGIN {
-	$VERSION = '0.14';
+	$VERSION = '0.15';
 }
 
 
@@ -187,7 +187,7 @@ sub _write_file {
 
 Bugs should always be submitted via the CPAN bug tracker
 
-L<http://rt.cpan.org/NoAuth/ReportBug.html?Queue=PPI%3A%3AProcessor>
+L<http://rt.cpan.org/NoAuth/ReportBug.html?Queue=PPI-Processor>
 
 For other issues, contact the maintainer
 
